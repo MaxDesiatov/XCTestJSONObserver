@@ -14,43 +14,43 @@
 import Foundation
 import XCTest
 
-struct TimedEvent: Codable, Equatable {
-    let name: String
-    let date: Date
+public struct TimedEvent: Codable, Equatable {
+    public let name: String
+    public let date: Date
 }
 
-struct FailedTestCase: Codable, Equatable {
-    let filePath: String?
-    let lineNumber: Int
-    let name: String
-    let description: String
+public struct FailedTestCase: Codable, Equatable {
+    public let filePath: String?
+    public let lineNumber: Int
+    public let name: String
+    public let description: String
 }
 
-struct FinishedTestCase: Codable, Equatable {
-    enum State: String, Codable {
+public struct FinishedTestCase: Codable, Equatable {
+    public enum State: String, Codable, CaseIterable {
         case skipped
         case passed
         case failed
     }
 
-    let state: State
-    let durationInSeconds: TimeInterval
+    public let state: State
+    public let durationInSeconds: TimeInterval
 }
 
-struct FinishedTestSuite: Codable, Equatable {
-    let executionCount: Int
-    let totalFailureCount: Int
-    let unexpectedExceptionCount: Int
-    let testDuration: TimeInterval
-    let totalDuration: TimeInterval
+public struct FinishedTestSuite: Codable, Equatable {
+    public let executionCount: Int
+    public let totalFailureCount: Int
+    public let unexpectedExceptionCount: Int
+    public let testDuration: TimeInterval
+    public let totalDuration: TimeInterval
 }
 
-enum Event: Codable, Equatable {
-    enum CodingError: Error {
+public enum Event: Codable, Equatable {
+    public enum CodingError: Error {
         case invalidVersion
     }
 
-    enum Kind: String, Codable {
+    public enum Kind: String, Codable, CaseIterable {
         case testSuiteStarted
         case testCaseStarted
         case testCaseFailed
@@ -70,7 +70,7 @@ enum Event: Codable, Equatable {
     case testCaseFinished(FinishedTestCase)
     case testSuiteFinished(FinishedTestSuite)
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         let version = try container.decode(Int.self, forKey: .version)
@@ -80,21 +80,21 @@ enum Event: Codable, Equatable {
 
         switch kind {
         case .testSuiteStarted:
-            self = .testSuiteStarted(try TimedEvent(from: decoder))
+            self = .testSuiteStarted(try container.decode(TimedEvent.self, forKey: .value))
         case .testCaseStarted:
-            self = .testCaseStarted(try TimedEvent(from: decoder))
+            self = .testCaseStarted(try container.decode(TimedEvent.self, forKey: .value))
         case .testCaseFailed:
-            self = .testCaseFailed(try FailedTestCase(from: decoder))
+            self = .testCaseFailed(try container.decode(FailedTestCase.self, forKey: .value))
         case .testCaseFinished:
-            self = .testCaseFinished(try FinishedTestCase(from: decoder))
+            self = .testCaseFinished(try container.decode(FinishedTestCase.self, forKey: .value))
         case .testSuiteFinished:
-            self = .testSuiteFinished(try FinishedTestSuite(from: decoder))
+            self = .testSuiteFinished(try container.decode(FinishedTestSuite.self, forKey: .value))
         }
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(1, forKey: CodingKeys.version)
+        try container.encode(0, forKey: CodingKeys.version)
 
         switch self {
         case let .testSuiteStarted(value):
@@ -117,80 +117,78 @@ enum Event: Codable, Equatable {
 }
 
 /// Prints JSON representations of each XCTestObservation event to stdout.
-internal class JSONObserver: NSObject, XCTestObservation {
+public class JSONObserver: NSObject, XCTestObservation {
+    let handler: (Event) -> ()
+
+    public init(handler: @escaping (Event) -> ()) {
+        self.handler = handler
+    }
+
     #if !os(WASI)
-    func testBundleWillStart(_ testBundle: Bundle) {}
+    public func testBundleWillStart(_ testBundle: Bundle) {}
     #endif
 
-    func testSuiteWillStart(_ testSuite: XCTestSuite) {
-        printAndFlush("Test Suite '\(testSuite.name)' started at \(dateFormatter.string(from: testSuite.testRun!.startDate!))")
+    public func testSuiteWillStart(_ testSuite: XCTestSuite) {
+        handler(Event.testSuiteStarted(.init(
+            name: testSuite.name,
+            date: testSuite.testRun!.startDate!
+        )))
     }
 
-    func testCaseWillStart(_ testCase: XCTestCase) {
-        printAndFlush("Test Case '\(testCase.name)' started at \(dateFormatter.string(from: testCase.testRun!.startDate!))")
+    public func testCaseWillStart(_ testCase: XCTestCase) {
+        handler(Event.testSuiteStarted(.init(
+            name: testCase.name,
+            date: testCase.testRun!.startDate!
+        )))
     }
 
-    func testCase(_ testCase: XCTestCase, didFailWithDescription description: String, inFile filePath: String?, atLine lineNumber: Int) {
-        let file = filePath ?? "<unknown>"
-        printAndFlush("\(file):\(lineNumber): error: \(testCase.name) : \(description)")
+    public func testCase(
+        _ testCase: XCTestCase,
+        didFailWithDescription description: String,
+        inFile filePath: String?,
+        atLine lineNumber: Int
+    ) {
+        handler(Event.testCaseFailed(.init(
+            filePath: filePath,
+            lineNumber: lineNumber,
+            name: testCase.name,
+            description: description
+        )))
     }
 
-    func testCaseDidFinish(_ testCase: XCTestCase) {
+    public func testCaseDidFinish(_ testCase: XCTestCase) {
         let testRun = testCase.testRun!
 
-        let verb: String
+        let state: FinishedTestCase.State
         if testRun.hasSucceeded {
             if testRun.hasBeenSkipped {
-                verb = "skipped"
+                state = .skipped
             } else {
-                verb = "passed"
+                state = .passed
             }
         } else {
-            verb = "failed"
+            state = .failed
         }
 
-        printAndFlush("Test Case '\(testCase.name)' \(verb) (\(formatTimeInterval(testRun.totalDuration)) seconds)")
+        handler(Event.testCaseFinished(.init(
+            state: state,
+            durationInSeconds: testRun.totalDuration
+        )))
     }
 
-    func testSuiteDidFinish(_ testSuite: XCTestSuite) {
+    public func testSuiteDidFinish(_ testSuite: XCTestSuite) {
         let testRun = testSuite.testRun!
-        let verb = testRun.hasSucceeded ? "passed" : "failed"
-        printAndFlush("Test Suite '\(testSuite.name)' \(verb) at \(dateFormatter.string(from: testRun.stopDate!))")
 
-        let tests = testRun.executionCount == 1 ? "test" : "tests"
-        let skipped = testRun.skipCount > 0 ? "\(testRun.skipCount) test\(testRun.skipCount != 1 ? "s" : "") skipped and " : ""
-        let failures = testRun.totalFailureCount == 1 ? "failure" : "failures"
-
-        printAndFlush("""
-        \t Executed \(testRun.executionCount) \(tests), \
-        with \(skipped)\
-        \(testRun.totalFailureCount) \(failures) \
-        (\(testRun.unexpectedExceptionCount) unexpected) \
-        in \(formatTimeInterval(testRun.testDuration)) (\(formatTimeInterval(testRun.totalDuration))) seconds
-        """
-        )
+        handler(Event.testSuiteFinished(.init(
+            executionCount: testRun.executionCount,
+            totalFailureCount: testRun.totalFailureCount,
+            unexpectedExceptionCount: testRun.unexpectedExceptionCount,
+            testDuration: testRun.testDuration,
+            totalDuration: testRun.totalDuration
+        )))
     }
 
     #if !os(WASI)
-    func testBundleDidFinish(_ testBundle: Bundle) {}
+    public func testBundleDidFinish(_ testBundle: Bundle) {}
     #endif
-
-    private lazy var dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        #if !os(WASI)
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        #endif
-        return formatter
-    }()
-
-    fileprivate func printAndFlush(_ message: String) {
-        print(message)
-        #if !os(Android) && !os(WASI)
-        fflush(stdout)
-        #endif
-    }
-
-    private func formatTimeInterval(_ timeInterval: TimeInterval) -> String {
-        String(round(timeInterval * 1000.0) / 1000.0)
-    }
 }

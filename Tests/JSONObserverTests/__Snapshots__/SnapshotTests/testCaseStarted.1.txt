@@ -1,0 +1,8 @@
+{
+  "version" : 0,
+  "kind" : "testCaseStarted",
+  "value" : {
+    "name" : "testCase",
+    "date" : -978361521
+  }
+}
