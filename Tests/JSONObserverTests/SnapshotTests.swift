@@ -23,7 +23,7 @@ func assert(_ event: Event, _ name: String = #function) throws {
 
     let encoded = try encoder.encode(event)
 
-    assertSnapshot(matching: String(data: encoded, encoding: .utf8)!, as: .lines, testName: name)
+    assertSnapshot(matching: event, as: .json, testName: name)
 
     let decoder = JSONDecoder()
 
