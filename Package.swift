@@ -14,11 +14,6 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(
-            name: "SnapshotTesting",
-            url: "https://github.com/pointfreeco/swift-snapshot-testing.git",
-            from: "1.8.0"
-        ),
         .package(url: "https://github.com/typelift/SwiftCheck.git", from: "0.8.1"),
     ],
     targets: [
@@ -30,7 +25,7 @@ let package = Package(
         ),
         .testTarget(
             name: "JSONObserverTests",
-            dependencies: ["SnapshotTesting", "SwiftCheck", "XCTestJSONObserver"]
+            dependencies: ["SwiftCheck", "XCTestJSONObserver"]
         ),
     ]
 )
