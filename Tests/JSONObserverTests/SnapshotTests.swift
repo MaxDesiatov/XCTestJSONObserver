@@ -19,7 +19,7 @@ import XCTest
 
 func assert(_ event: Event, _ name: String = #function) throws {
     let encoder = JSONEncoder()
-    encoder.outputFormatting = [.prettyPrinted]
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
 
     let encoded = try encoder.encode(event)
 

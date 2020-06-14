@@ -1,8 +1,8 @@
 {
-  "version" : 0,
   "kind" : "testSuiteStarted",
   "value" : {
-    "name" : "testSuite",
-    "date" : -978294855
-  }
+    "date" : -978294855,
+    "name" : "testSuite"
+  },
+  "version" : 0
 }

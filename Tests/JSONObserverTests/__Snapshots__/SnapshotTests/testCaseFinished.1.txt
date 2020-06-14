@@ -1,8 +1,8 @@
 {
-  "version" : 0,
   "kind" : "testCaseFinished",
   "value" : {
-    "state" : "passed",
-    "durationInSeconds" : 4.2000000000000002
-  }
+    "durationInSeconds" : 4.2000000000000002,
+    "state" : "passed"
+  },
+  "version" : 0
 }

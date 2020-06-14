@@ -1,11 +1,11 @@
 {
-  "version" : 0,
   "kind" : "testSuiteFinished",
   "value" : {
-    "totalFailureCount" : 24,
-    "unexpectedExceptionCount" : 1,
     "executionCount" : 42,
     "testDuration" : 1.2,
-    "totalDuration" : 12.300000000000001
-  }
+    "totalDuration" : 12.300000000000001,
+    "totalFailureCount" : 24,
+    "unexpectedExceptionCount" : 1
+  },
+  "version" : 0
 }

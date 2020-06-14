@@ -1,10 +1,10 @@
 {
-  "version" : 0,
   "kind" : "testCaseFailed",
   "value" : {
-    "lineNumber" : 42,
-    "name" : "testCase",
     "description" : "testCase failed",
-    "filePath" : "File.swift"
-  }
+    "filePath" : "File.swift",
+    "lineNumber" : 42,
+    "name" : "testCase"
+  },
+  "version" : 0
 }
