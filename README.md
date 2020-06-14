@@ -1,3 +1,3 @@
 # XCTestJSONObserver
 
-A description of this package.
+JSON observer and test reporter for XCTest.
