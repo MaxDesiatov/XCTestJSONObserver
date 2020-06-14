@@ -14,19 +14,19 @@
 import Foundation
 import XCTest
 
-public struct TimedEvent: Codable, Equatable {
+public struct TimedEvent: Codable {
     public let name: String
     public let date: Date
 }
 
-public struct FailedTestCase: Codable, Equatable {
+public struct FailedTestCase: Codable {
     public let filePath: String?
     public let lineNumber: Int
     public let name: String
     public let description: String
 }
 
-public struct FinishedTestCase: Codable, Equatable {
+public struct FinishedTestCase: Codable {
     public enum State: String, Codable, CaseIterable {
         case skipped
         case passed
@@ -37,7 +37,7 @@ public struct FinishedTestCase: Codable, Equatable {
     public let durationInSeconds: TimeInterval
 }
 
-public struct FinishedTestSuite: Codable, Equatable {
+public struct FinishedTestSuite: Codable {
     public let executionCount: Int
     public let totalFailureCount: Int
     public let unexpectedExceptionCount: Int
@@ -45,7 +45,7 @@ public struct FinishedTestSuite: Codable, Equatable {
     public let totalDuration: TimeInterval
 }
 
-public enum Event: Codable, Equatable {
+public enum Event: Codable {
     public enum CodingError: Error {
         case invalidVersion
     }

@@ -95,6 +95,13 @@ extension Event: Arbitrary {
     }
 }
 
+func doublesAreEqual(first: Double, second: Double) -> Bool {
+    if fabs(first - second) < .ulpOfOne {
+        return true
+    }
+    return false
+}
+
 final class PropertyTests: XCTestCase {
     func testReversibleEncoding() throws {
         property("Event encoding is reversible") <- forAll { (event: Event) in
